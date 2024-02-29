@@ -1,12 +1,13 @@
 #include<iostream>
 #include<stdlib.h>
 #include<limits>
+#include <vector>
+
 using namespace std;
 
 void flush_inputbuffer_wait(void)
 {
       cin.ignore(numeric_limits<streamsize>::max(), '\n');
-      getchar();
 }
 
 class bankaccount
@@ -24,14 +25,6 @@ class bankaccount
             account_balance=0;
             cout<<"default constructor of bankaccount created"<<endl;
         }
-        void Deposit(int amount)
-        {
-            account_balance+=amount;
-        }
-        void Withdraw(int amount)
-        {
-            account_balance-=amount;
-        }
         void Set_account_number(int number)
         {
             account_number=number;
@@ -48,26 +41,29 @@ class bankaccount
         {
             account_type=type;
         }
-        void Get_account_number(void)
+        void Deposit(int amount)
         {
-            cout<<"the account number: "<<account_number<<endl;
-            flush_inputbuffer_wait();
+            account_balance+=amount;
         }
-        void Get_account_holdername(void)
+        void Withdraw(int amount)
         {
-            cout<<"the account holder name: "<<account_holder_name<<endl;
-            flush_inputbuffer_wait();
+            account_balance-=amount;
+        }
+        int Get_account_number(void)
+        {
+            return account_number;
+        }
+        string Get_account_holdername(void)
+        {
+            return account_holder_name;
 
         }
-        void Get_account_type(void)
+        string Get_account_type(void)
         {
-            cout<<"the account type: "<<account_type<<endl;
-            flush_inputbuffer_wait();
-
+            return account_type;
         }
         int Get_account_balance(void)
         {
-            cout<<"the account balance: "<<account_balance<<endl;
             return account_balance;
         }
         void Display_account_info(void)
@@ -87,9 +83,7 @@ class bankaccount
 
 class bank
 {
-    const int number_of_bank_accounts=3;
-    bankaccount bank_accounts[3];
-    static int counter;
+    vector<bankaccount> bank_database;
     public:
     bank()
     {
@@ -98,95 +92,130 @@ class bank
     }
     void AddAccount(void)
     {
-        if(counter>=number_of_bank_accounts)
-        {
-            cout<<"the bank database is full press enter for new option"<<endl;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            getchar();
-        }
-        else
-        {
-            string card_holder_name;
-            string account_type;
-            double account_balance=0;
-            cout<<"enter the account information :"<<endl;
-            bank_accounts[counter].Set_account_number(counter);
-            cout<<"enter the card holder name"<<endl;
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            getline(cin,card_holder_name);            
-            bank_accounts[counter].Set_accountholder_name(card_holder_name);
-            cout<<"enter the account type "<<endl;
-            getline(cin,account_type);            
-            bank_accounts[counter].Set_account_type(account_type);
-            cout<<"enter the initial account balance"<<endl;
-            cin>>account_balance;
-            bank_accounts[counter].Set_accountbalance(account_balance);
-            bank_accounts[counter].Display_account_info();
-            flush_inputbuffer_wait();
-            counter++;
-        }
+        bankaccount local_bank_account;
+        int account_number;
+        string card_holder_name;
+        string account_type;
+        double account_balance=0;
+        cout<<"enter the account information :"<<endl;
+        cout<<"enter the account number: ";
+        cin>>account_number;
+        local_bank_account.Set_account_number(account_number);
+        cout<<"enter the card holder name: ";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin>>card_holder_name;
+        local_bank_account.Set_accountholder_name(card_holder_name);     
+        cout<<"enter the account type: ";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin>>account_type;
+        local_bank_account.Set_account_type(account_type);
+        cout<<"enter the initial account balance: ";
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cin>>account_balance;
+        local_bank_account.Set_accountbalance(account_balance);
+        bank_database.push_back(local_bank_account);
+        cout<<"account added successfully press enter for new option"<<endl;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getchar();
     }
     void Deposit()
     {
         int account_number=0;
         int amount=0;
+        int account_number_flag=0;
         cout<<"enter the account number"<<endl;
         cin>>account_number;
-        cout<<"enter the amount needed"<<endl;
-        cin>>amount;
-        bank_accounts[account_number].Deposit(amount);
-        cout<<"deposite successful new balance is: ";
-        cout<<bank_accounts[account_number].Get_account_balance()<<endl;
-        cout<<"deposite successful press enter for new option"<<endl;
-        flush_inputbuffer_wait();
+        for(auto iterator=bank_database.begin();iterator!=bank_database.end();iterator++)
+        {
+            if(iterator->Get_account_number()==account_number)
+            {
+                account_number_flag=1;
+                cout<<"Welcome to the ATM Bank System Mr/Ms: "<<iterator->Get_account_holdername()<<endl;
+                cout<<"enter the amount needed"<<endl;
+                cin>>amount;    
+                iterator->Deposit(amount);
+                cout<<"deposite successful new balance is: "<<iterator->Get_account_balance()<<endl;
+                cout<<"press enter for new option"<<endl;
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                getchar();
+                break;
+            }
+        }
+        if(account_number_flag==0)
+        {
+            cout<<"account number not found in the database press enter for new option"<<endl;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            getchar();
+        }
     }
     void Withdraw()
     {
         int account_number=0;
         int amount=0;
+        int account_number_flag=0;
         cout<<"enter the account number"<<endl;
         cin>>account_number;
-        cout<<"enter the amount needed"<<endl;
-        cin>>amount;
-        if(amount>(bank_accounts[account_number].Get_account_balance()))
+        for(auto iterator=bank_database.begin();iterator!=bank_database.end();iterator++)
         {
-            cout<<"insufficient funds press enter for new option"<<endl;
-            flush_inputbuffer_wait();
-
+            if(iterator->Get_account_number()==account_number)
+            {
+                account_number_flag=1;
+                cout<<"Welcome to the ATM Bank System Mr/Ms: "<<iterator->Get_account_holdername()<<endl;
+                cout<<"enter the amount needed"<<endl;
+                cin>>amount;
+                if(iterator->Get_account_balance()<amount)
+                {
+                    cout<<"insufficient funds press enter for new option"<<endl;
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    getchar();
+                }
+                else
+                {
+                    iterator->Withdraw(amount);
+                    cout<<"withdraw successful new balance is: "<<iterator->Get_account_balance()<<endl;
+                    cout<<"Press enter for new option"<<endl;
+                    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                    getchar();
+                }
+                break;
+            }
         }
-        else
+        if(account_number_flag==0)
         {
-            bank_accounts[account_number].Withdraw(amount);
-            cout<<"withdraw successful new balance is: ";
-            cout<<bank_accounts[account_number].Get_account_balance()<<endl;
-            cout<<"press enter for new option"<<endl;
-            flush_inputbuffer_wait();
+            cout<<"account number not found in the database press enter for new option"<<endl;
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            getchar();
         }
     }
     void GetTotalBalance(void)
     {
         double sum_of_balances=0;
-        for(int i=0;i<counter;i++)
+        for(auto iterator=bank_database.begin();iterator!=bank_database.end();iterator++)
         {
-            sum_of_balances+=bank_accounts[i].Get_account_balance();
+        sum_of_balances+=iterator->Get_account_balance();
         }
         cout<<"the total balance of bank accounts: "<<sum_of_balances<<endl;
         cout<<"press enter for new option "<<endl;
-        flush_inputbuffer_wait();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getchar();
     }
     void DisplayAllAccounts(void)
     {
         cout<<"Display the information of all bank accounts"<<endl;
-        for(int i=0;i<counter;i++)
+        for(auto iterator=bank_database.begin();iterator!=bank_database.end();iterator++)
         {
-            bank_accounts[i].Display_account_info();
+            iterator->Display_account_info();
         }
-        flush_inputbuffer_wait();
+        cout<<"Number of accounts in the system is: "<<bank_database.size()<<endl;
+        cout<<"press enter for new option "<<endl;
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        getchar();
+    }
+    void EmptyDataBase(void)
+    {
+        bank_database.clear();
     }
 };  
-
-
-int bank::counter=0;
 
 int main(void)
 {
@@ -229,8 +258,9 @@ int main(void)
                 b1.DisplayAllAccounts();
             break;
             case 6:
-                    system("CLS");
+                system("CLS");
                 cout<<"system shutdown"<<endl;
+                b1.EmptyDataBase();
                 flag=0;
             break;
             default:
